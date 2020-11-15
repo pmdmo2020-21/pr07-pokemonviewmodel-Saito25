@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Pokemon Selection simulator</string>
+    <string name="iv_Selection_bulbasur_description">bulbasur\'s image</string>
+    <string name="iv_Selection_giratina_description">Giratina\'s image</string>
+    <string name="iv_Selection_cubone_description">Cubone\'s image</string>
+    <string name="iv_Selection_gyarados_description">Gyarados\'s image</string>
+    <string name="iv_Selection_feebas_description">Feebas\'s image</string>
+    <string name="iv_Selection_pikachu_description">Pikachu\'s image</string>
+    <string name="rb_Selection_bulbasur">Bulbasur</string>
+    <string name="rb_Selection_giratina">Giratina</string>
+    <string name="rb_Selection_cubone">Cubone</string>
+    <string name="rb_Selection_gyarados">Gyarados</string>
+    <string name="rb_Selection_feebas">Feebas</string>
+    <string name="rb_Selection_pikachu">Pikachu</string>
+    <string name="iv_battle_first_pokemon_description">Image of the first pokemon that will figth</string>
+    <string name="iv_battle_second_pokemon_description">Image of the Second pokemon that will figth</string>
+    <string name="iv_battle_vs_image">Versus icons, decorative only</string>
+    <string name="btn_battle_name">Start the fight</string>
+    <string name="txt_battle_instructions">Select the pokemons for the battle and see who wins</string>
+    <string name="txt_winner_description">And the winner is…</string>
+    <string name="iv_winner_description">Pokemon battle winner</string>
+</resources>
