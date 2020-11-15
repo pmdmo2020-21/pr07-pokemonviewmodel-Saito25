@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pokemon Selection simulator</string>
+    <string name="iv_Selection_bulbasur_description">Imagen de un bulbasur</string>
+    <string name="iv_Selection_giratina_description">Imagen de un Giratina</string>
+    <string name="iv_Selection_cubone_description">Imagen de un Cubone</string>
+    <string name="iv_Selection_gyarados_description">Imagen de un Gyarados</string>
+    <string name="iv_Selection_feebas_description">Imagen de un Feebas</string>
+    <string name="iv_Selection_pikachu_description">Imagen de un Pikachu</string>
+    <string name="rb_Selection_bulbasur">Bulbasur</string>
+    <string name="rb_Selection_giratina">Giratina</string>
+    <string name="rb_Selection_cubone">Cubone</string>
+    <string name="rb_Selection_gyarados">Gyarados</string>
+    <string name="rb_Selection_feebas">Feebas</string>
+    <string name="rb_Selection_pikachu">Pikachu</string>
+    <string name="iv_battle_first_pokemon_description">Imagen del primer pokemon que va a pelear</string>
+    <string name="iv_battle_second_pokemon_description">Imagen del segundo pokemon que va a pelear</string>
+    <string name="iv_battle_vs_image">Icono de versus, meramente decorativo</string>
+    <string name="btn_battle_name">Inicia la pelea</string>
+    <string name="txt_battle_instructions">Selecciona al pokemon para la batalla y observa quien gana</string>
+    <string name="txt_winner_description">Y el ganador es…</string>
+    <string name="iv_winner_description">Pokemon ganador de la batalla</string>
+</resources>

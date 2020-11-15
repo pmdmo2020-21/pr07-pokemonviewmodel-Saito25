@@ -1,35 +1,32 @@
 package es.iessaladillo.pedrojoya.intents.ui.battle
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import es.iessaladillo.pedrojoya.intents.data.local.Database
+import androidx.lifecycle.LiveData
 import es.iessaladillo.pedrojoya.intents.data.local.model.Pokemon
 import es.iessaladillo.pedrojoya.intents.databinding.BattleActivityBinding
 import es.iessaladillo.pedrojoya.intents.ui.selection.SelectionActivity
 import es.iessaladillo.pedrojoya.intents.ui.winner.WinnerActivity
-import java.lang.IllegalArgumentException
-import java.lang.RuntimeException
+import java.lang.NullPointerException
 
-@Suppress("DEPRECATION")
 class BattleActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_POKEMON_ID: String = "EXTRA_POKEMON_ID"
-
-        fun newIntent(context: Context, pokemonId: Long): Intent {
+        const val EXTRA_POKEMON: String = "EXTRA_POKEMON"
+        fun newIntent(context: Context, pokemon: Pokemon): Intent {
             return Intent(context, BattleActivity::class.java)
-                .putExtra(EXTRA_POKEMON_ID, pokemonId)
+                .putExtra(EXTRA_POKEMON, pokemon)
         }
     }
 
+    private val viewModel: BattleActivityViewModel by viewModels()
     private lateinit var binding: BattleActivityBinding
-    private val pokemonIds: LongArray = longArrayOf(0, 0)
     private lateinit var selectFisrtPokemonCall: ActivityResultLauncher<Intent>
     private lateinit var selectSecondPokemonCall: ActivityResultLauncher<Intent>
 
@@ -39,129 +36,79 @@ class BattleActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupFields()
         setupViews()
+        observePokemons()
     }
 
     private fun setupFields() {
         selectFisrtPokemonCall =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (checkActivityResult(result.resultCode, result.data)) {
-                    sendPokemonForSet(
-                        result.data, binding.ivBattleFirstPokemon,
-                        binding.txtBattleFirstPokemonName, 0
-                    )
+                    val pokemon: Pokemon? = result.data?.getParcelableExtra(EXTRA_POKEMON)
+                    if(pokemon != null) {
+                        viewModel.changeFirstPokemon(pokemon)
+                    }
                 }
             }
 
         selectSecondPokemonCall =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (checkActivityResult(result.resultCode, result.data)) {
-                    sendPokemonForSet(
-                        result.data, binding.ivBattleSecondPokemon,
-                        binding.txtBattleSecondPokemonName, 1
-                    )
+                    val pokemon: Pokemon? = result.data?.getParcelableExtra(EXTRA_POKEMON)
+                    if(pokemon != null) {
+                        viewModel.changeSecondPokemon(pokemon)
+                    }
                 }
             }
     }
 
-    private fun sendPokemonForSet(
-        data: Intent?,
-        ivBattleFirstPokemon: ImageView,
-        txtBattleFirstPokemonName: TextView,
-        indexOfArray: Int
-    ) {
-        if (data == null) {
-            throw IllegalArgumentException("La información recibida no puede ser nula")
-        }
-
-        pokemonIds[indexOfArray] = data.getLongExtra(EXTRA_POKEMON_ID, 0)
-        setPokemonById(
-            ivBattleFirstPokemon,
-            txtBattleFirstPokemonName,
-            pokemonIds[indexOfArray]
-        )
-    }
-
-    private fun checkActivityResult(resultCode: Int, data: Intent?): Boolean {
-        return resultCode == RESULT_OK && data != null
-
-    }
-
     private fun setupViews() {
-        setPokemonsRandoms()
         binding.llBattleTopRectangle.setOnClickListener {
-            navigateToSelectionActivity(pokemonIds[0], selectFisrtPokemonCall)
+            navigateToSelectionActivity(viewModel.firstPokemon, selectFisrtPokemonCall)
         }
         binding.llBattleMiddleRectangle.setOnClickListener {
-            navigateToSelectionActivity(pokemonIds[1], selectSecondPokemonCall)
+            navigateToSelectionActivity(viewModel.secondPokemon, selectSecondPokemonCall)
         }
         binding.btnBattleLaunchBattle.setOnClickListener {
-            val winnerPokemon: Long = chooseWinnerPokemon()
+            val winnerPokemon: Pokemon = viewModel.getWinnerPokemon()
             navigateToWinnerActivity(winnerPokemon)
         }
     }
 
-    private fun chooseWinnerPokemon(): Long {
-        val pokemon1: Pokemon = Database.getPokemonById(pokemonIds[0])
-        val pokemon2: Pokemon = Database.getPokemonById(pokemonIds[1])
-
-        return if (pokemon1.attack > pokemon2.attack) pokemon1.id else pokemon2.id
+    private fun observePokemons() {
+        viewModel.firstPokemon.observe(this) { showFirstPokemonChange(it) }
+        viewModel.secondPokemon.observe(this) { showSecondPokemonChange(it) }
     }
 
-    private fun navigateToWinnerActivity(winnerPokemon: Long) {
+    @SuppressLint("UseCompatLoadingForDrawables")
+    private fun showFirstPokemonChange(pokemon: Pokemon) {
+        binding.ivBattleFirstPokemon.setImageDrawable(getDrawable(pokemon.drawable))
+        binding.txtBattleFirstPokemonName.text = getString(pokemon.name)
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    private fun showSecondPokemonChange(pokemon: Pokemon) {
+        binding.ivBattleSecondPokemon.setImageDrawable(getDrawable(pokemon.drawable))
+        binding.txtBattleSecondPokemonName.text = getString(pokemon.name)
+    }
+
+
+    private fun checkActivityResult(resultCode: Int, data: Intent?): Boolean {
+        return resultCode == RESULT_OK && data != null
+    }
+
+    private fun navigateToWinnerActivity(winnerPokemon: Pokemon) {
         val intentForWinnerActivity = WinnerActivity.newIntent(this, winnerPokemon)
         startActivity(intentForWinnerActivity)
     }
 
     private fun navigateToSelectionActivity(
-        pokemonId: Long,
+        pokemon: LiveData<Pokemon>,
         activityResultLauncher: ActivityResultLauncher<Intent>
     ) {
-        val intentforSelectionActivity: Intent = SelectionActivity.newIntent(this, pokemonId)
+        val pokemonNoNull = pokemon.value ?: throw NullPointerException()
+        val intentforSelectionActivity: Intent = SelectionActivity.newIntent(this, pokemonNoNull)
         activityResultLauncher.launch(intentforSelectionActivity)
     }
 
-    private fun setPokemonsRandoms() {
-        setPokemonRandom(
-            binding.ivBattleFirstPokemon, binding.txtBattleFirstPokemonName,
-            0
-        )
-        setPokemonRandom(
-            binding.ivBattleSecondPokemon, binding.txtBattleSecondPokemonName,
-            1
-        )
-    }
 
-    private fun setPokemonById(
-        ivBattlePokemon: ImageView,
-        txtBattlePokemonName: TextView, pokemonId: Long
-    ) {
-        val pokemon: Pokemon = Database.getPokemonById(pokemonId)
-
-        setPokemonImageForBattle(ivBattlePokemon, pokemon.drawable)
-        setPokemonNameForBattle(txtBattlePokemonName, pokemon.name)
-    }
-
-    private fun setPokemonRandom(
-        imageOfPokemon: ImageView,
-        nameOfPokemon: TextView,
-        positionInArray: Int
-    ) {
-        val choosedPokemon: Pokemon = chooseRandomPokemon()
-
-        setPokemonImageForBattle(imageOfPokemon, choosedPokemon.drawable)
-        setPokemonNameForBattle(nameOfPokemon, choosedPokemon.name)
-        pokemonIds[positionInArray] = choosedPokemon.id
-    }
-
-    private fun chooseRandomPokemon(): Pokemon {
-        return Database.getRandomPokemon()
-    }
-
-    private fun setPokemonImageForBattle(imageView: ImageView, drawable: Int) {
-        imageView.setImageDrawable(getDrawable(drawable))
-    }
-
-    private fun setPokemonNameForBattle(textView: TextView, name: Int) {
-        textView.text = getText(name)
-    }
 }

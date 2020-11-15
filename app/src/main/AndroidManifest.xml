@@ -10,15 +10,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PR06Intents">
-        <activity
-            android:name=".ui.selection.SelectionActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.winner.WinnerActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.battle.BattleActivity"
-            android:screenOrientation="portrait">
+        <activity android:name=".ui.selection.SelectionActivity" />
+        <activity android:name=".ui.winner.WinnerActivity" />
+        <activity android:name=".ui.battle.BattleActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

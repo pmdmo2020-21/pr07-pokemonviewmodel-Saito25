@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.RadioButton
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import es.iessaladillo.pedrojoya.intents.data.local.Database
 import es.iessaladillo.pedrojoya.intents.data.local.model.Pokemon
@@ -18,18 +19,18 @@ import java.lang.NullPointerException
 class SelectionActivity : AppCompatActivity() {
 
     companion object {
-        const val EXTRA_POKEMON_ID: String = "EXTRA_POKEMON_ID"
-        fun newIntent(context: Context, pokemonId: Long): Intent {
+        const val EXTRA_POKEMON: String = "EXTRA_POKEMON"
+        fun newIntent(context: Context, pokemon: Pokemon): Intent {
             return Intent(context, SelectionActivity::class.java)
-                .putExtra(EXTRA_POKEMON_ID, pokemonId)
+                .putExtra(EXTRA_POKEMON, pokemon)
         }
     }
 
     private lateinit var binding: SelectionActivityBinding
     private lateinit var radioButtons: Array<RadioButton>
     private lateinit var imageViews: Array<ImageView>
-    private lateinit var pokemon: Pokemon
 
+    private val viewModel: SelectionActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +39,7 @@ class SelectionActivity : AppCompatActivity() {
         receiveDataFromBattleActivity()
         setupFields()
         setupViews()
-        setupInitState()
+        observePokemon()
     }
 
     override fun onBackPressed() {
@@ -47,16 +48,20 @@ class SelectionActivity : AppCompatActivity() {
     }
 
     private fun setActivityResult() {
-        val intent: Intent = BattleActivity.newIntent(this, pokemon.id)
-        setResult(RESULT_OK, intent)
+        val pokemon: Pokemon? = viewModel.selectPokemon.value
+        if (pokemon != null) {
+            val data: Intent = BattleActivity.newIntent(this, pokemon)
+            setResult(RESULT_OK, data)
+        }
     }
 
     private fun receiveDataFromBattleActivity() {
-        val pokemon: Pokemon
-
         chechIntentData()
-        pokemon = extractPokemonFromId(intent.getLongExtra(EXTRA_POKEMON_ID, 0))
-        selectCurrentPokemon(pokemon)
+        val pokemon: Pokemon? = intent.getParcelableExtra(EXTRA_POKEMON)
+
+        if (pokemon != null) {
+            viewModel.changeSelectedPokemon(pokemon)
+        }
     }
 
     private fun setupFields() {
@@ -86,30 +91,36 @@ class SelectionActivity : AppCompatActivity() {
         setupImageViewsListener()
     }
 
-    private fun setupInitState() {
+
+    private fun observePokemon() {
+        viewModel.selectPokemon.observe(this) {
+            showSelectedPokemonChange(it)
+        }
+    }
+
+    private fun showSelectedPokemonChange(pokemon: Pokemon) {
+        showSelectedRadioButton(pokemon)
+    }
+
+    private fun showSelectedRadioButton(selectedPokemon: Pokemon) {
         var pokemon: Pokemon
 
         for (radioButton in radioButtons) {
             pokemon = radioButton.tag as Pokemon
-
-            if (this.pokemon == pokemon) {
-                radioButton.isChecked = true
-                return
+            if (selectedPokemon != pokemon) {
+                radioButton.isChecked = false
+            } else {
+                if(!radioButton.isChecked) {
+                    radioButton.isChecked = true
+                }
             }
         }
     }
 
     private fun chechIntentData() {
-        if (intent == null || !intent.hasExtra(EXTRA_POKEMON_ID)) {
+        if (intent == null || !intent.hasExtra(EXTRA_POKEMON)) {
             throw RuntimeException("La información del intent no es correcta")
         }
-    }
-
-    private fun extractPokemonFromId(pokemonId: Long): Pokemon {
-        val pokemon: Pokemon = Database.getPokemonById(pokemonId)
-            ?: throw NullPointerException("No se ha encontrado el pokemon dado")
-
-        return pokemon
     }
 
     private fun setupTagsOfRadioButtons() {
@@ -140,30 +151,14 @@ class SelectionActivity : AppCompatActivity() {
         }
     }
 
-    private fun listenOnClickimage(view: View) {
-        val radioButton: RadioButton = view.tag as RadioButton
-        radioButton.isChecked = true
-        checkRadioButton(radioButton)
-    }
-
     private fun checkRadioButton(view: View) {
         val selectedRadioButton: RadioButton = view as RadioButton
-
-        for (radioButton in radioButtons) {
-            if (selectedRadioButton != radioButton) {
-                radioButton.isChecked = false
-            }
-        }
-        selectCurrentPokemonFromView(view)
+        val pokemon: Pokemon = selectedRadioButton.tag as Pokemon
+        viewModel.changeSelectedPokemon(pokemon)
     }
 
-    private fun selectCurrentPokemonFromView(view: View) {
-        val pokemon: Pokemon = view.tag as Pokemon
-        selectCurrentPokemon(pokemon)
-    }
-
-
-    private fun selectCurrentPokemon(pokemon: Pokemon) {
-        this.pokemon = pokemon
+    private fun listenOnClickimage(view: View) {
+        val radioButton: RadioButton = view.tag as RadioButton
+        checkRadioButton(radioButton)
     }
 }
